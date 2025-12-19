@@ -1,0 +1,3188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>КМГ ЭкоМонитор - Экологические паспорта ДЗО</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ============ BASE STYLES ============ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #f1f5f9 0%, #f8fafc 50%, #ecfdf5 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* ============ NAVIGATION ============ */
+        .nav {
+            background: linear-gradient(90deg, #064e3b 0%, #065f46 50%, #0f766e 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-logo {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .nav-title h1 {
+            font-size: 1.125rem;
+            font-weight: 700;
+        }
+
+        .nav-title p {
+            font-size: 0.75rem;
+            color: #6ee7b7;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #a7f3d0;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-btn.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .nav-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ============ MAIN CONTAINER ============ */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* ============ PAGE HEADER ============ */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .page-header p {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #ecfdf5;
+            border-radius: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-badge span {
+            font-size: 0.875rem;
+            color: #047857;
+        }
+
+        /* ============ KPI CARDS ============ */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .kpi-header {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-header.emerald { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .kpi-header.blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+        .kpi-header.purple { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+        .kpi-header.orange { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); }
+        .kpi-header.red { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+
+        .kpi-icon {
+            font-size: 1.75rem;
+            opacity: 0.8;
+        }
+
+        .kpi-change {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .kpi-change.positive { background: #fef2f2; color: #b91c1c; }
+        .kpi-change.negative { background: #dcfce7; color: #15803d; }
+
+        .kpi-body {
+            padding: 1rem;
+        }
+
+        .kpi-body .label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .kpi-body .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .kpi-body .unit {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .kpi-body .subtitle {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* ============ CARDS & PANELS ============ */
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        /* ============ GRID LAYOUTS ============ */
+        .grid-3-1 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        /* ============ MAP CONTAINER ============ */
+        .map-container {
+            position: relative;
+            width: 100%;
+            height: 380px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .map-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-marker {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .map-marker:hover {
+            transform: scale(1.2);
+        }
+
+        .map-legend {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .map-legend-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .map-legend-items {
+            display: flex;
+            gap: 16px;
+        }
+
+        .map-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: #475569;
+        }
+
+        .map-legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .map-legend-dot.refinery { background: #ef4444; }
+        .map-legend-dot.upstream { background: #3b82f6; }
+        .map-legend-dot.transport { background: #8b5cf6; }
+
+        .selected-dzo-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .selected-dzo-photo {
+            font-size: 2.5rem;
+        }
+
+        .selected-dzo-details h4 {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .selected-dzo-details p {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .selected-dzo-value {
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .selected-dzo-value .number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #059669;
+        }
+
+        .selected-dzo-value .label {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* ============ PIE CHART LEGEND ============ */
+        .pie-legend {
+            margin-top: 1rem;
+        }
+
+        .pie-legend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.875rem;
+        }
+
+        .pie-legend-item .left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pie-legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+        }
+
+        .pie-legend-item .name {
+            color: #64748b;
+        }
+
+        .pie-legend-item .value {
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        /* ============ CHART CONTAINERS ============ */
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        .chart-container-large {
+            position: relative;
+            height: 300px;
+        }
+
+        /* ============ PAGES ============ */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* ============ FOOTER ============ */
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+
+        /* ============ PASSPORT PAGE STYLES ============ */
+        .passport-layout {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .passport-sidebar {
+            width: 240px;
+            flex-shrink: 0;
+        }
+
+        .passport-sidebar-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .dzo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .dzo-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .dzo-btn:hover {
+            background: #f8fafc;
+        }
+
+        .dzo-btn.active {
+            background: #ecfdf5;
+            border-color: #10b981;
+        }
+
+        .dzo-btn-photo {
+            font-size: 1.5rem;
+        }
+
+        .dzo-btn-info .name {
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .dzo-btn-info .city {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .passport-content {
+            flex: 1;
+        }
+
+        .passport-top-row {
+            display: grid;
+            grid-template-columns: 280px 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Passport Cover (Static) */
+        .passport-cover {
+            background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #0f766e 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            color: white;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .passport-cover-border {
+            border: 3px solid rgba(234, 179, 8, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .passport-emblem {
+            width: 60px;
+            height: 60px;
+            background: rgba(234, 179, 8, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .passport-country {
+            font-size: 0.7rem;
+            color: #fcd34d;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .passport-cover-center {
+            text-align: center;
+        }
+
+        .passport-cover-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .passport-cover-subtitle {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .passport-cover-photo {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .passport-cover-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fcd34d;
+        }
+
+        .passport-cover-fullname {
+            font-size: 0.7rem;
+            color: #a7f3d0;
+            margin-top: 4px;
+        }
+
+        .passport-cover-footer {
+            font-size: 0.65rem;
+            color: rgba(234, 179, 8, 0.5);
+        }
+
+        /* Passport Info Card */
+        .passport-info {
+            background: #fffbeb;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .passport-info-header {
+            height: 8px;
+            background: linear-gradient(90deg, #065f46 0%, #0f766e 100%);
+        }
+
+        .passport-info-content {
+            padding: 1.5rem;
+        }
+
+        .passport-info-top {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .passport-photo-container {
+            width: 120px;
+        }
+
+        .passport-photo {
+            width: 110px;
+            height: 140px;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-radius: 8px;
+            border: 4px solid white;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+        }
+
+        .passport-type-badge {
+            margin-top: 8px;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .passport-type-badge.refinery { background: #fef2f2; color: #b91c1c; }
+        .passport-type-badge.upstream { background: #eff6ff; color: #1d4ed8; }
+        .passport-type-badge.transport { background: #f5f3ff; color: #6d28d9; }
+
+        .passport-fields {
+            flex: 1;
+        }
+
+        .passport-field {
+            border-bottom: 2px solid #d1fae5;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+
+        .passport-field:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .passport-field-label {
+            font-size: 0.65rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .passport-field-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .passport-field-value.large {
+            font-size: 1rem;
+        }
+
+        .passport-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .passport-certifications {
+            margin-top: 1rem;
+        }
+
+        .passport-cert-title {
+            font-size: 0.65rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .passport-stamps {
+            display: flex;
+            gap: 8px;
+        }
+
+        .passport-stamp {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #dc2626;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(-5deg);
+            opacity: 0.8;
+        }
+
+        .passport-stamp-icon {
+            font-size: 1rem;
+            color: #dc2626;
+        }
+
+        .passport-stamp-text {
+            font-size: 0.5rem;
+            font-weight: 700;
+            color: #dc2626;
+        }
+
+        /* Passport Data Card */
+        .passport-data {
+            background: #fffbeb;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .passport-data-header {
+            height: 8px;
+            background: linear-gradient(90deg, #065f46 0%, #0f766e 100%);
+        }
+
+        .passport-data-content {
+            padding: 1.5rem;
+        }
+
+        .passport-data-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .passport-data-title span {
+            font-size: 1.25rem;
+        }
+
+        .passport-metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .passport-metric {
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .passport-metric-label {
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+
+        .passport-metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .passport-metric-value.green { color: #059669; }
+        .passport-metric-value.purple { color: #7c3aed; }
+
+        .passport-metric-unit {
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+
+        .passport-mini-chart {
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+        }
+
+        .passport-mini-chart-title {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .passport-history {
+            margin-top: 1rem;
+        }
+
+        .passport-history-title {
+            font-size: 0.65rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .passport-history-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .passport-year-badge {
+            padding: 6px 12px;
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .passport-year-badge .year {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #065f46;
+        }
+
+        .passport-year-badge .status {
+            font-size: 0.6rem;
+            color: #059669;
+        }
+
+        /* Passport Analytics */
+        .passport-analytics {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .passport-analytics-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .passport-analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .passport-analytics-kpi {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .passport-analytics-kpi-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .passport-analytics-kpi-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .passport-analytics-kpi-value.emerald { color: #059669; }
+        .passport-analytics-kpi-value.blue { color: #2563eb; }
+        .passport-analytics-kpi-value.purple { color: #7c3aed; }
+        .passport-analytics-kpi-value.orange { color: #ea580c; }
+
+        .passport-analytics-kpi-unit {
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+
+        .passport-charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .passport-chart-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .passport-chart-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 0.75rem;
+            flex: 0 0 auto;
+        }
+        .passport-chart-card canvas {
+            flex: 1 1 auto;
+            max-height: 200px;        /* pick what looks best */
+            width: 100% !important;
+            height: 200px !important; /* must be definite when maintainAspectRatio:false */
+        }
+
+        .passport-mini-chart canvas {
+            width: 100% !important;
+            height: 120px !important;
+            max-height: 120px;
+            }
+        /* ============ COMPARISON PAGE STYLES ============ */
+        .compare-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .compare-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .compare-header p {
+            color: #64748b;
+        }
+
+        .compare-selector {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .compare-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 9999px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .compare-btn:hover {
+            border-color: #94a3b8;
+        }
+
+        .compare-btn.active {
+            border-color: #10b981;
+            background: #ecfdf5;
+            color: #047857;
+        }
+
+        .compare-table {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .compare-table-header {
+            display: grid;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .compare-table-header-cell {
+            padding: 1.5rem;
+            text-align: center;
+            border-left: 1px solid #e2e8f0;
+        }
+
+        .compare-table-header-cell:first-child {
+            background: #f8fafc;
+            border-left: none;
+        }
+
+        .compare-dzo-photo {
+            font-size: 3rem;
+            margin-bottom: 8px;
+        }
+
+        .compare-dzo-name {
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .compare-dzo-city {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .compare-dzo-type {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .compare-dzo-type.refinery { background: #fef2f2; color: #b91c1c; }
+        .compare-dzo-type.upstream { background: #eff6ff; color: #1d4ed8; }
+        .compare-dzo-type.transport { background: #f5f3ff; color: #6d28d9; }
+
+        .compare-table-row {
+            display: grid;
+        }
+
+        .compare-table-row:nth-child(odd) {
+            background: #f8fafc;
+        }
+
+        .compare-table-cell {
+            padding: 1rem;
+            border-left: 1px solid #e2e8f0;
+        }
+
+        .compare-table-cell:first-child {
+            border-left: none;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .compare-table-cell .label {
+            font-size: 0.875rem;
+        }
+
+        .compare-table-cell .unit {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            display: block;
+        }
+
+        .compare-table-cell.data {
+            text-align: center;
+        }
+
+        .compare-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .compare-value.best {
+            color: #059669;
+        }
+
+        .compare-check {
+            color: #10b981;
+            margin-left: 4px;
+        }
+
+        .compare-radar-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+        }
+
+        .compare-radar-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .compare-legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .compare-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: #475569;
+        }
+
+        .compare-legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        /* ============ PNUR PAGE STYLES ============ */
+        .pnur-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .pnur-summary-card {
+            border-radius: 16px;
+            padding: 1.5rem;
+            color: white;
+        }
+
+        .pnur-summary-card.emerald { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .pnur-summary-card.blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+        .pnur-summary-card.purple { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+        .pnur-summary-card.orange { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); }
+
+        .pnur-summary-icon {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .pnur-summary-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .pnur-summary-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .pnur-summary-unit {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .pnur-filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .pnur-filter-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pnur-filter-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pnur-filter-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .pnur-filter-btn.active {
+            background: #059669;
+            color: white;
+        }
+
+        .pnur-filter-select {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            font-size: 0.875rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* Timeline */
+        .pnur-timeline {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .pnur-timeline-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+        }
+
+        .pnur-timeline-header {
+            display: flex;
+            margin-bottom: 1rem;
+            padding-left: 280px;
+        }
+
+        .pnur-timeline-year {
+            flex: 1;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .pnur-timeline-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .pnur-timeline-label {
+            width: 280px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .pnur-timeline-label-photo {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .pnur-timeline-label-text {
+            min-width: 0;
+        }
+
+        .pnur-timeline-label-name {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #1e293b;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .pnur-timeline-label-dzo {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .pnur-timeline-bar-container {
+            flex: 1;
+            height: 28px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .pnur-timeline-bar {
+            position: absolute;
+            height: 100%;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            min-width: 60px;
+        }
+
+        .pnur-timeline-bar.completed { background: #10b981; }
+        .pnur-timeline-bar.in_progress { background: #3b82f6; }
+        .pnur-timeline-bar.planned { background: #94a3b8; }
+
+        .pnur-timeline-bar-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: #1d4ed8;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .pnur-timeline-bar-text {
+            font-size: 0.7rem;
+            color: white;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+            white-space: nowrap;
+        }
+
+        /* PNUR Cards */
+        .pnur-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .pnur-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .pnur-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .pnur-card-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pnur-card-photo {
+            font-size: 1.75rem;
+        }
+
+        .pnur-card-status {
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            border: 1px solid;
+        }
+
+        .pnur-card-status.completed {
+            background: #d1fae5;
+            color: #047857;
+            border-color: #6ee7b7;
+        }
+
+        .pnur-card-status.in_progress {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border-color: #93c5fd;
+        }
+
+        .pnur-card-status.planned {
+            background: #f1f5f9;
+            color: #475569;
+            border-color: #cbd5e1;
+        }
+
+        .pnur-card-category {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .pnur-card-dzo {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .pnur-card-name {
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .pnur-card-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            text-align: center;
+        }
+
+        .pnur-card-metric {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .pnur-card-metric-value {
+            font-size: 1.125rem;
+            font-weight: 700;
+        }
+
+        .pnur-card-metric-value.emerald { color: #059669; }
+        .pnur-card-metric-value.blue { color: #2563eb; }
+        .pnur-card-metric-value.purple { color: #7c3aed; }
+
+        .pnur-card-metric-label {
+            font-size: 0.65rem;
+            color: #64748b;
+        }
+
+        .pnur-card-progress {
+            margin-top: 12px;
+        }
+
+        .pnur-card-progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .pnur-card-progress-bar {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .pnur-card-progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            border-radius: 9999px;
+            transition: width 0.3s;
+        }
+
+        /* ============ ANALYTICS PAGE STYLES ============ */
+        .analytics-charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .analytics-chart-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+        }
+
+        .analytics-chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .analytics-legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .analytics-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: #475569;
+        }
+
+        .analytics-legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .analytics-ranking {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .analytics-ranking-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .analytics-ranking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .analytics-ranking-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+
+        .analytics-ranking-position {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #d1fae5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #047857;
+        }
+
+        .analytics-ranking-photo {
+            font-size: 1.75rem;
+        }
+
+        .analytics-ranking-info {
+            flex: 1;
+        }
+
+        .analytics-ranking-name {
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .analytics-ranking-code {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .analytics-ranking-change {
+            text-align: right;
+        }
+
+        .analytics-ranking-change-value {
+            font-size: 1.125rem;
+            font-weight: 700;
+        }
+
+        .analytics-ranking-change-value.positive { color: #dc2626; }
+        .analytics-ranking-change-value.negative { color: #059669; }
+
+        .analytics-ranking-change-label {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .analytics-ranking-progress {
+            width: 120px;
+        }
+
+        .analytics-ranking-progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .analytics-ranking-progress-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .analytics-ranking-progress-fill {
+            height: 100%;
+            background: #10b981;
+            border-radius: 9999px;
+        }
+
+        .analytics-risks {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+        }
+
+        .analytics-risks-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .analytics-risks-title span {
+            font-size: 1.25rem;
+        }
+
+        .analytics-risks-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .analytics-risk-card {
+            padding: 1rem;
+            border-radius: 12px;
+            border: 2px solid;
+        }
+
+        .analytics-risk-card.high {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .analytics-risk-card.medium {
+            background: #fff7ed;
+            border-color: #fed7aa;
+        }
+
+        .analytics-risk-card.low {
+            background: #fefce8;
+            border-color: #fef08a;
+        }
+
+        .analytics-risk-level {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .analytics-risk-level.high { background: #fecaca; color: #b91c1c; }
+        .analytics-risk-level.medium { background: #fed7aa; color: #c2410c; }
+        .analytics-risk-level.low { background: #fef08a; color: #a16207; }
+
+        .analytics-risk-name {
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .analytics-risk-dzos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .analytics-risk-dzo {
+            padding: 4px 8px;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 1200px) {
+            .kpi-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .passport-top-row {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .passport-top-row .passport-cover {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .grid-3-1, .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .passport-layout {
+                flex-direction: column;
+            }
+            
+            .passport-sidebar {
+                width: 100%;
+            }
+            
+            .dzo-list {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .passport-top-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .passport-top-row .passport-cover {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <div class="nav-logo">🌿</div>
+                <div class="nav-title">
+                    <h1>КМГ ЭкоМонитор</h1>
+                    <p>Экологические паспорта ДЗО</p>
+                </div>
+            </div>
+            <div class="nav-menu">
+                <button class="nav-btn active" data-page="dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    Дашборд
+                </button>
+                <button class="nav-btn" data-page="passport">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    Паспорт
+                </button>
+                <button class="nav-btn" data-page="compare">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M11 18H8a2 2 0 0 1-2-2V9"/></svg>
+                    Сравнение
+                </button>
+                <button class="nav-btn" data-page="pnur">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                    ПНУР
+                </button>
+                <button class="nav-btn" data-page="analytics">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    Аналитика
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Dashboard Page -->
+        <div id="page-dashboard" class="page active">
+            <div class="page-header">
+                <div>
+                    <h2>Экологический дашборд КМГ</h2>
+                    <p>Сводные данные по всем ДЗО • 2024</p>
+                </div>
+                <div class="status-badge">
+                    <div class="status-dot"></div>
+                    <span>Данные актуальны</span>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-header emerald">
+                        <span class="kpi-icon">💨</span>
+                        <span class="kpi-change negative">↓ 3.2%</span>
+                    </div>
+                    <div class="kpi-body">
+                        <p class="label">Общие выбросы ПГ</p>
+                        <p class="value" id="kpi-ghg">4.37</p>
+                        <p class="unit">млн тонн CO₂</p>
+                        <p class="subtitle">Scope 1 + Scope 2</p>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header blue">
+                        <span class="kpi-icon">🏭</span>
+                        <span class="kpi-change negative">↓ 5.2%</span>
+                    </div>
+                    <div class="kpi-body">
+                        <p class="label">Выбросы ЗВ</p>
+                        <p class="value" id="kpi-emissions">46.8</p>
+                        <p class="unit">тыс. тонн</p>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header purple">
+                        <span class="kpi-icon">🎯</span>
+                    </div>
+                    <div class="kpi-body">
+                        <p class="label">Активных мер ПНУР</p>
+                        <p class="value" id="kpi-pnur">12</p>
+                        <p class="unit">мероприятий</p>
+                        <p class="subtitle">из 19 всего</p>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header orange">
+                        <span class="kpi-icon">💰</span>
+                        <span class="kpi-change positive">↑ 12.5%</span>
+                    </div>
+                    <div class="kpi-body">
+                        <p class="label">Инвестиции в экологию</p>
+                        <p class="value">48.2</p>
+                        <p class="unit">млрд ₸</p>
+                        <p class="subtitle">2024 год</p>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header emerald">
+                        <span class="kpi-icon">📉</span>
+                    </div>
+                    <div class="kpi-body">
+                        <p class="label">Прогресс к 2030</p>
+                        <p class="value">34</p>
+                        <p class="unit">%</p>
+                        <p class="subtitle">Цель: -15% от 2019</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map and Pie Chart -->
+            <div class="grid-3-1">
+                <div class="card">
+                    <h3 class="card-title">География ДЗО</h3>
+                    <div class="map-container">
+                        <svg class="map-svg" viewBox="0 0 800 400" id="kazakhstan-map">
+                            <defs>
+                                <linearGradient id="mapGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#d1fae5"/>
+                                    <stop offset="100%" stop-color="#a7f3d0"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M80,120 L150,80 L280,70 L380,60 L480,50 L580,70 L680,100 L720,150 L700,220 L650,280 L550,300 L450,320 L350,310 L250,290 L150,250 L100,200 Z" fill="url(#mapGrad)" stroke="#059669" stroke-width="2"/>
+                        </svg>
+                        <div class="map-legend">
+                            <div class="map-legend-title">Тип ДЗО</div>
+                            <div class="map-legend-items">
+                                <div class="map-legend-item">
+                                    <div class="map-legend-dot refinery"></div>
+                                    <span>НПЗ</span>
+                                </div>
+                                <div class="map-legend-item">
+                                    <div class="map-legend-dot upstream"></div>
+                                    <span>Добыча</span>
+                                </div>
+                                <div class="map-legend-item">
+                                    <div class="map-legend-dot transport"></div>
+                                    <span>Транспорт</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="selected-dzo-info" id="selected-dzo-info" style="display: none;">
+                        <span class="selected-dzo-photo" id="selected-dzo-photo"></span>
+                        <div class="selected-dzo-details">
+                            <h4 id="selected-dzo-name"></h4>
+                            <p id="selected-dzo-city"></p>
+                        </div>
+                        <div class="selected-dzo-value">
+                            <span class="number" id="selected-dzo-ghg"></span>
+                            <span class="label">тыс. т CO₂</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Структура выбросов ПГ</h3>
+                    <div class="chart-container">
+                        <canvas id="pie-chart"></canvas>
+                    </div>
+                    <div class="pie-legend" id="pie-legend"></div>
+                </div>
+            </div>
+
+            <!-- Trend Chart -->
+            <div class="card">
+                <h3 class="card-title">Динамика выбросов парниковых газов КМГ</h3>
+                <div class="chart-container-large">
+                    <canvas id="trend-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Passport Page -->
+        <div id="page-passport" class="page">
+            <div class="page-header">
+                <div>
+                    <h2>Экологический паспорт ДЗО</h2>
+                    <p>Детальная информация о дочерних организациях</p>
+                </div>
+            </div>
+
+            <div class="passport-layout">
+                <!-- Sidebar -->
+                <div class="passport-sidebar">
+                    <div class="passport-sidebar-title">Выберите ДЗО</div>
+                    <div class="dzo-list" id="dzo-list"></div>
+                </div>
+
+                <!-- Content -->
+                <div class="passport-content">
+                    <!-- Top Row: 3 Blocks -->
+                    <div class="passport-top-row">
+                        <!-- Block 1: Passport Cover (Static) -->
+                        <div class="passport-cover" id="passport-cover">
+                            <div class="passport-cover-border">
+                                <div>
+                                    <div class="passport-emblem">🌿</div>
+                                    <div class="passport-country">Республика Казахстан</div>
+                                </div>
+                                <div class="passport-cover-center">
+                                    <div class="passport-cover-title">ЭКОЛОГИЧЕСКИЙ</div>
+                                    <div class="passport-cover-subtitle">ПАСПОРТ</div>
+                                    <div class="passport-cover-photo" id="cover-photo">🏭</div>
+                                    <div class="passport-cover-name" id="cover-name">АНПЗ</div>
+                                    <div class="passport-cover-fullname" id="cover-fullname">ТОО "Атырауский НПЗ"</div>
+                                </div>
+                                <div class="passport-cover-footer">АО НК «КазМунайГаз»</div>
+                            </div>
+                        </div>
+
+                        <!-- Block 2: Passport Information -->
+                        <div class="passport-info" id="passport-info">
+                            <div class="passport-info-header"></div>
+                            <div class="passport-info-content">
+                                <div class="passport-info-top">
+                                    <div class="passport-photo-container">
+                                        <div class="passport-photo" id="info-photo">🏭</div>
+                                        <div class="passport-type-badge refinery" id="info-type">Нефтепереработка</div>
+                                    </div>
+                                    <div class="passport-fields">
+                                        <div class="passport-field">
+                                            <div class="passport-field-label">Наименование / Name</div>
+                                            <div class="passport-field-value large" id="info-fullname">ТОО "Атырауский НПЗ"</div>
+                                        </div>
+                                        <div class="passport-grid">
+                                            <div class="passport-field">
+                                                <div class="passport-field-label">Код ДЗО</div>
+                                                <div class="passport-field-value" id="info-code">АНПЗ</div>
+                                            </div>
+                                            <div class="passport-field">
+                                                <div class="passport-field-label">Год основания</div>
+                                                <div class="passport-field-value" id="info-established">1945</div>
+                                            </div>
+                                            <div class="passport-field">
+                                                <div class="passport-field-label">Местоположение</div>
+                                                <div class="passport-field-value" id="info-city">Атырау</div>
+                                            </div>
+                                            <div class="passport-field">
+                                                <div class="passport-field-label">Сотрудники</div>
+                                                <div class="passport-field-value" id="info-employees">2,850</div>
+                                            </div>
+                                        </div>
+                                        <div class="passport-field">
+                                            <div class="passport-field-label">Руководитель</div>
+                                            <div class="passport-field-value" id="info-director">Ахметов Нурлан Бекетович</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="passport-certifications">
+                                    <div class="passport-cert-title">Сертификаты</div>
+                                    <div class="passport-stamps" id="info-stamps"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Block 3: Additional Passport Data -->
+                        <div class="passport-data" id="passport-data">
+                            <div class="passport-data-header"></div>
+                            <div class="passport-data-content">
+                                <div class="passport-data-title">
+                                    <span>💨</span>
+                                    Экологические показатели 2024
+                                </div>
+                                <div class="passport-metrics-grid">
+                                    <div class="passport-metric">
+                                        <div class="passport-metric-label">Выбросы ПГ</div>
+                                        <div class="passport-metric-value" id="data-ghg">1,937</div>
+                                        <div class="passport-metric-unit">тыс. т CO₂</div>
+                                    </div>
+                                    <div class="passport-metric">
+                                        <div class="passport-metric-label">Цель 2030</div>
+                                        <div class="passport-metric-value green" id="data-target">1,500</div>
+                                        <div class="passport-metric-unit">тыс. т CO₂</div>
+                                    </div>
+                                    <div class="passport-metric">
+                                        <div class="passport-metric-label">Выбросы ЗВ</div>
+                                        <div class="passport-metric-value" id="data-emissions">11,459</div>
+                                        <div class="passport-metric-unit">тонн/год</div>
+                                    </div>
+                                    <div class="passport-metric">
+                                        <div class="passport-metric-label">Меры ПНУР</div>
+                                        <div class="passport-metric-value purple" id="data-measures">27</div>
+                                        <div class="passport-metric-unit">мероприятий</div>
+                                    </div>
+                                </div>
+                                <div class="passport-mini-chart">
+                                    <div class="passport-mini-chart-title">Динамика выбросов ПГ</div>
+                                    <canvas id="passport-mini-chart" height="100"></canvas>
+                                </div>
+                                <div class="passport-history">
+                                    <div class="passport-history-title">История отчетности</div>
+                                    <div class="passport-history-badges">
+                                        <div class="passport-year-badge"><span class="year">2019</span><span class="status">✓ Сдано</span></div>
+                                        <div class="passport-year-badge"><span class="year">2020</span><span class="status">✓ Сдано</span></div>
+                                        <div class="passport-year-badge"><span class="year">2021</span><span class="status">✓ Сдано</span></div>
+                                        <div class="passport-year-badge"><span class="year">2022</span><span class="status">✓ Сдано</span></div>
+                                        <div class="passport-year-badge"><span class="year">2023</span><span class="status">✓ Сдано</span></div>
+                                        <div class="passport-year-badge"><span class="year">2024</span><span class="status">✓ Сдано</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom: Analytics -->
+                    <div class="passport-analytics" id="passport-analytics">
+                        <div class="passport-analytics-title">Аналитика: <span id="analytics-dzo-name">АНПЗ</span></div>
+                        <div class="passport-analytics-grid">
+                            <div class="passport-analytics-kpi">
+                                <div class="passport-analytics-kpi-label">Scope 1</div>
+                                <div class="passport-analytics-kpi-value emerald" id="analytics-scope1">1,499</div>
+                                <div class="passport-analytics-kpi-unit">тыс. т CO₂</div>
+                            </div>
+                            <div class="passport-analytics-kpi">
+                                <div class="passport-analytics-kpi-label">Scope 2</div>
+                                <div class="passport-analytics-kpi-value blue" id="analytics-scope2">437</div>
+                                <div class="passport-analytics-kpi-unit">тыс. т CO₂</div>
+                            </div>
+                            <div class="passport-analytics-kpi">
+                                <div class="passport-analytics-kpi-label">Водопотребление</div>
+                                <div class="passport-analytics-kpi-value purple" id="analytics-water">7,273</div>
+                                <div class="passport-analytics-kpi-unit">тыс. м³</div>
+                            </div>
+                            <div class="passport-analytics-kpi">
+                                <div class="passport-analytics-kpi-label">Штрафы</div>
+                                <div class="passport-analytics-kpi-value orange" id="analytics-fines">22</div>
+                                <div class="passport-analytics-kpi-unit">тыс. ₸</div>
+                            </div>
+                        </div>
+                        <div class="passport-charts-row">
+                            <div class="passport-chart-card">
+                                <div class="passport-chart-title">Динамика выбросов ПГ (2019-2024)</div>
+                                <canvas id="passport-ghg-chart" height="180"></canvas>
+                            </div>
+                            <div class="passport-chart-card">
+                                <div class="passport-chart-title">Scope 1 vs Scope 2</div>
+                                <canvas id="passport-scope-chart" height="180"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Page -->
+        <div id="page-compare" class="page">
+            <div class="compare-header">
+                <h2>Сравнение ДЗО</h2>
+                <p>Выберите до 3 компаний для сравнения показателей</p>
+            </div>
+            
+            <div class="compare-selector" id="compare-selector"></div>
+            
+            <div class="compare-table" id="compare-table"></div>
+            
+            <div class="compare-radar-container">
+                <div class="compare-radar-title">Радарное сравнение (нормализованные показатели)</div>
+                <div class="chart-container-large">
+                    <canvas id="radar-chart"></canvas>
+                </div>
+                <div class="compare-legend" id="compare-legend"></div>
+            </div>
+        </div>
+
+        <!-- PNUR Page -->
+        <div id="page-pnur" class="page">
+            <div class="page-header">
+                <div>
+                    <h2>Программа низкоуглеродного развития</h2>
+                    <p>Мероприятия по сокращению выбросов CO₂ • 2022-2031</p>
+                </div>
+            </div>
+
+            <div class="pnur-summary">
+                <div class="pnur-summary-card emerald">
+                    <div class="pnur-summary-icon">⚡</div>
+                    <div class="pnur-summary-label">Всего мероприятий</div>
+                    <div class="pnur-summary-value" id="pnur-total">19</div>
+                </div>
+                <div class="pnur-summary-card blue">
+                    <div class="pnur-summary-icon">📉</div>
+                    <div class="pnur-summary-label">Потенциал сокращения</div>
+                    <div class="pnur-summary-value" id="pnur-co2">168k</div>
+                    <div class="pnur-summary-unit">т CO₂/год</div>
+                </div>
+                <div class="pnur-summary-card purple">
+                    <div class="pnur-summary-icon">💰</div>
+                    <div class="pnur-summary-label">Инвестиции</div>
+                    <div class="pnur-summary-value" id="pnur-cost">40.1</div>
+                    <div class="pnur-summary-unit">млрд ₸</div>
+                </div>
+                <div class="pnur-summary-card orange">
+                    <div class="pnur-summary-icon">✓</div>
+                    <div class="pnur-summary-label">Достигнуто сокращение</div>
+                    <div class="pnur-summary-value" id="pnur-achieved">95k</div>
+                    <div class="pnur-summary-unit">т CO₂/год</div>
+                </div>
+            </div>
+
+            <div class="pnur-filters">
+                <div class="pnur-filter-group" id="pnur-status-filters">
+                    <button class="pnur-filter-btn active" data-filter="all">Все</button>
+                    <button class="pnur-filter-btn" data-filter="completed">Завершено</button>
+                    <button class="pnur-filter-btn" data-filter="in_progress">В работе</button>
+                    <button class="pnur-filter-btn" data-filter="planned">Планируется</button>
+                </div>
+                <select class="pnur-filter-select" id="pnur-category-filter">
+                    <option value="all">Все категории</option>
+                    <option value="Энергоэффективность">Энергоэффективность</option>
+                    <option value="Снижение выбросов">Снижение выбросов</option>
+                    <option value="Утилизация ПНГ">Утилизация ПНГ</option>
+                    <option value="Водоочистка">Водоочистка</option>
+                </select>
+            </div>
+
+            <div class="pnur-timeline" id="pnur-timeline">
+                <div class="pnur-timeline-title">Временная шкала мероприятий</div>
+                <div class="pnur-timeline-header">
+                    <div class="pnur-timeline-year">2022</div>
+                    <div class="pnur-timeline-year">2023</div>
+                    <div class="pnur-timeline-year">2024</div>
+                    <div class="pnur-timeline-year">2025</div>
+                    <div class="pnur-timeline-year">2026</div>
+                    <div class="pnur-timeline-year">2027</div>
+                </div>
+                <div id="pnur-timeline-rows"></div>
+            </div>
+
+            <div class="pnur-cards" id="pnur-cards"></div>
+        </div>
+
+        <!-- Analytics Page -->
+        <div id="page-analytics" class="page">
+            <div class="page-header">
+                <div>
+                    <h2>Аналитика и тренды</h2>
+                    <p>Детальный анализ экологических показателей КМГ</p>
+                </div>
+            </div>
+
+            <div class="analytics-charts-grid">
+                <div class="analytics-chart-card">
+                    <div class="analytics-chart-title">Структура выбросов ПГ</div>
+                    <div class="chart-container">
+                        <canvas id="analytics-scope-chart"></canvas>
+                    </div>
+                    <div class="analytics-legend">
+                        <div class="analytics-legend-item">
+                            <div class="analytics-legend-color" style="background: #059669;"></div>
+                            <span>Scope 1 (прямые)</span>
+                        </div>
+                        <div class="analytics-legend-item">
+                            <div class="analytics-legend-color" style="background: #0891b2;"></div>
+                            <span>Scope 2 (электроэнергия)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="analytics-chart-card">
+                    <div class="analytics-chart-title">Водопотребление</div>
+                    <div class="chart-container">
+                        <canvas id="analytics-water-chart"></canvas>
+                    </div>
+                </div>
+                <div class="analytics-chart-card">
+                    <div class="analytics-chart-title">Динамика штрафов</div>
+                    <div class="chart-container">
+                        <canvas id="analytics-fines-chart"></canvas>
+                    </div>
+                </div>
+                <div class="analytics-chart-card">
+                    <div class="analytics-chart-title">Структура мероприятий ПНУР</div>
+                    <div class="chart-container">
+                        <canvas id="analytics-pnur-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analytics-ranking">
+                <div class="analytics-ranking-title">Рейтинг ДЗО по снижению выбросов (2019 → 2024)</div>
+                <div class="analytics-ranking-list" id="analytics-ranking"></div>
+            </div>
+
+            <div class="analytics-risks">
+                <div class="analytics-risks-title">
+                    <span>⚠️</span>
+                    Экологические риски ДЗО
+                </div>
+                <div class="analytics-risks-grid">
+                    <div class="analytics-risk-card high">
+                        <div class="analytics-risk-level high">Высокий</div>
+                        <div class="analytics-risk-name">Обмеление Каспийского моря</div>
+                        <div class="analytics-risk-dzos">
+                            <span class="analytics-risk-dzo">АНПЗ</span>
+                            <span class="analytics-risk-dzo">CASPI_BITUM</span>
+                        </div>
+                    </div>
+                    <div class="analytics-risk-card medium">
+                        <div class="analytics-risk-level medium">Средний</div>
+                        <div class="analytics-risk-name">Ограниченность водных ресурсов</div>
+                        <div class="analytics-risk-dzos">
+                            <span class="analytics-risk-dzo">ЭМГ</span>
+                            <span class="analytics-risk-dzo">ОМГ</span>
+                            <span class="analytics-risk-dzo">КГМ</span>
+                        </div>
+                    </div>
+                    <div class="analytics-risk-card low">
+                        <div class="analytics-risk-level low">Низкий</div>
+                        <div class="analytics-risk-name">Экстремальные температуры</div>
+                        <div class="analytics-risk-dzos">
+                            <span class="analytics-risk-dzo">КТО</span>
+                            <span class="analytics-risk-dzo">ПКОП</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2024 АО НК «КазМунайГаз» • Экологический мониторинг ДЗО
+    </footer>
+
+    <script>
+        // ============ DATA ============
+        const dzoData = [
+            {
+                code: 'АНПЗ',
+                name: 'Атырауский НПЗ',
+                fullName: 'ТОО "Атырауский нефтеперерабатывающий завод"',
+                type: 'refinery',
+                typeLabel: 'Нефтепереработка',
+                director: 'Ахметов Нурлан Бекетович',
+                location: { lat: 46.95, lng: 51.88, city: 'Атырау' },
+                established: 1945,
+                employees: 2850,
+                photo: '🏭',
+                ghg: { 2019: 2052473, 2020: 2182392, 2021: 2165714, 2022: 2040109, 2023: 2048978, 2024: 1936735 },
+                scope1: { 2019: 1640138, 2020: 1760425, 2021: 1729834, 2022: 1644801, 2023: 1583169, 2024: 1499256 },
+                scope2: { 2019: 412335, 2020: 421967, 2021: 435880, 2022: 395308, 2023: 465809, 2024: 437479 },
+                emissions: { 2019: 10423, 2020: 11958, 2021: 11839, 2022: 10412, 2023: 10439, 2024: 11459 },
+                water: { 2019: 7105400, 2020: 6867700, 2021: 7262643, 2022: 6933400, 2023: 7108270, 2024: 7272900 },
+                waste: { 2019: 32937, 2020: 54753, 2021: 80723, 2022: 26956, 2023: 31240, 2024: 23574 },
+                taxes: { 2019: 272413, 2020: 348046, 2021: 355707, 2022: 311387, 2023: 335847, 2024: 321393 },
+                fines: { 2019: 3241, 2020: 6634, 2021: 790, 2022: 198, 2023: 94, 2024: 22 },
+                measures: 27,
+                certifications: ['ISO 14001', 'ISO 50001', 'OHSAS 18001'],
+                target2030: 1500000
+            },
+            {
+                code: 'КГМ',
+                name: 'Казгермунай',
+                fullName: 'ТОО "СП Казгермунай"',
+                type: 'upstream',
+                typeLabel: 'Добыча',
+                director: 'Киякбаев Зияш Калдыбекович',
+                location: { lat: 44.85, lng: 62.45, city: 'Кызылорда' },
+                established: 1993,
+                employees: 1420,
+                photo: '🛢️',
+                ghg: { 2019: 237740, 2020: 170291, 2021: 165942, 2022: 136854, 2023: 154001, 2024: 176581 },
+                scope1: { 2019: 97783, 2020: 41815, 2021: 42147, 2022: 21645, 2023: 21815, 2024: 25565 },
+                scope2: { 2019: 139957, 2020: 128476, 2021: 123795, 2022: 115209, 2023: 132186, 2024: 151016 },
+                emissions: { 2019: 1269, 2020: 1118, 2021: 639, 2022: 1078, 2023: 816, 2024: 835 },
+                water: { 2019: 1140, 2020: 1661, 2021: 1904, 2022: 1873, 2023: 1527, 2024: 1314 },
+                waste: { 2019: 12717, 2020: 12393, 2021: 5138, 2022: 11940, 2023: 8413, 2024: 6852 },
+                taxes: { 2019: 84387, 2020: 116207, 2021: 35674, 2022: 32082, 2023: 34830, 2024: 48579 },
+                fines: { 2019: 0, 2020: 0, 2021: 0, 2022: 0, 2023: 0, 2024: 0 },
+                measures: 21,
+                certifications: ['ISO 14001', 'ISO 45001'],
+                target2030: 150000
+            },
+            {
+                code: 'CASPI_BITUM',
+                name: 'Caspi Bitum',
+                fullName: 'ТОО «СП «CASPI BITUM»',
+                type: 'refinery',
+                typeLabel: 'Нефтепереработка',
+                director: 'Сун Гуантао',
+                location: { lat: 43.65, lng: 51.20, city: 'Актау' },
+                established: 2010,
+                employees: 680,
+                photo: '🏗️',
+                ghg: { 2019: 48193, 2020: 60169, 2021: 53546, 2022: 56234, 2023: 60867, 2024: 44883 },
+                scope1: { 2019: 34105, 2020: 44629, 2021: 37626, 2022: 40123, 2023: 43451, 2024: 32069 },
+                scope2: { 2019: 14088, 2020: 15540, 2021: 15920, 2022: 16110, 2023: 17416, 2024: 12814 },
+                emissions: { 2019: 499, 2020: 349, 2021: 494, 2022: 477, 2023: 476, 2024: 453 },
+                water: { 2019: 0, 2020: 0, 2021: 232891, 2022: 175358, 2023: 172139, 2024: 158082 },
+                waste: { 2019: 176, 2020: 162, 2021: 205, 2022: 180, 2023: 194, 2024: 167 },
+                taxes: { 2019: 2915, 2020: 3115, 2021: 4744, 2022: 5188, 2023: 6453, 2024: 6818 },
+                fines: { 2019: 0, 2020: 0, 2021: 0, 2022: 2662, 2023: 0, 2024: 1107 },
+                measures: 16,
+                certifications: ['ISO 14001'],
+                target2030: 40000
+            },
+            {
+                code: 'КТО',
+                name: 'КазТрансОйл',
+                fullName: 'АО «КазТрансОйл»',
+                type: 'transport',
+                typeLabel: 'Транспортировка',
+                director: 'Сулейменов Димаш Маратович',
+                location: { lat: 51.13, lng: 71.43, city: 'Астана' },
+                established: 1997,
+                employees: 8900,
+                photo: '🚂',
+                ghg: { 2019: 280000, 2020: 275000, 2021: 270000, 2022: 268294, 2023: 321070, 2024: 325286 },
+                scope1: { 2019: 58000, 2020: 55000, 2021: 54000, 2022: 56109, 2023: 82673, 2024: 112887 },
+                scope2: { 2019: 222000, 2020: 220000, 2021: 216000, 2022: 212185, 2023: 238397, 2024: 212399 },
+                emissions: { 2019: 26650, 2020: 23396, 2021: 21230, 2022: 20036, 2023: 17549, 2024: 16333 },
+                water: { 2019: 535880, 2020: 472160, 2021: 479950, 2022: 401830, 2023: 365800, 2024: 396840 },
+                waste: { 2019: 49499, 2020: 44056, 2021: 79696, 2022: 19351, 2023: 31815, 2024: 15269 },
+                taxes: { 2019: 97947, 2020: 78689, 2021: 87544, 2022: 84989, 2023: 74165, 2024: 74629 },
+                fines: { 2019: 1010, 2020: 543, 2021: 4035, 2022: 3861, 2023: 6900, 2024: 5261 },
+                measures: 45,
+                certifications: ['ISO 14001', 'ISO 50001', 'ISO 45001'],
+                target2030: 280000
+            },
+            {
+                code: 'ПКОП',
+                name: 'ПКОП',
+                fullName: 'ТОО «Павлодарский НХЗ»',
+                type: 'refinery',
+                typeLabel: 'Нефтепереработка',
+                director: 'Касымов Берик Сагындыкович',
+                location: { lat: 52.29, lng: 76.95, city: 'Павлодар' },
+                established: 1978,
+                employees: 3200,
+                photo: '🏭',
+                ghg: { 2019: 890000, 2020: 920000, 2021: 880000, 2022: 850000, 2023: 870000, 2024: 840000 },
+                scope1: { 2019: 720000, 2020: 750000, 2021: 710000, 2022: 680000, 2023: 700000, 2024: 670000 },
+                scope2: { 2019: 170000, 2020: 170000, 2021: 170000, 2022: 170000, 2023: 170000, 2024: 170000 },
+                emissions: { 2019: 8500, 2020: 8800, 2021: 8200, 2022: 7900, 2023: 8100, 2024: 7800 },
+                water: { 2019: 5200000, 2020: 5100000, 2021: 5300000, 2022: 5000000, 2023: 5150000, 2024: 4900000 },
+                waste: { 2019: 25000, 2020: 28000, 2021: 24000, 2022: 22000, 2023: 23500, 2024: 21000 },
+                taxes: { 2019: 185000, 2020: 192000, 2021: 178000, 2022: 172000, 2023: 180000, 2024: 175000 },
+                fines: { 2019: 500, 2020: 320, 2021: 180, 2022: 450, 2023: 280, 2024: 150 },
+                measures: 32,
+                certifications: ['ISO 14001', 'ISO 50001'],
+                target2030: 700000
+            },
+            {
+                code: 'ЭМГ',
+                name: 'Эмбамунайгаз',
+                fullName: 'АО «Эмбамунайгаз»',
+                type: 'upstream',
+                typeLabel: 'Добыча',
+                director: 'Нурпеисов Куаныш Турсынович',
+                location: { lat: 46.80, lng: 54.30, city: 'Атырау' },
+                established: 1999,
+                employees: 4500,
+                photo: '🛢️',
+                ghg: { 2019: 520000, 2020: 510000, 2021: 495000, 2022: 480000, 2023: 470000, 2024: 455000 },
+                scope1: { 2019: 420000, 2020: 410000, 2021: 395000, 2022: 380000, 2023: 370000, 2024: 355000 },
+                scope2: { 2019: 100000, 2020: 100000, 2021: 100000, 2022: 100000, 2023: 100000, 2024: 100000 },
+                emissions: { 2019: 5200, 2020: 5100, 2021: 4900, 2022: 4700, 2023: 4600, 2024: 4400 },
+                water: { 2019: 320000, 2020: 310000, 2021: 305000, 2022: 295000, 2023: 290000, 2024: 280000 },
+                waste: { 2019: 18000, 2020: 17500, 2021: 16800, 2022: 16200, 2023: 15800, 2024: 15200 },
+                taxes: { 2019: 142000, 2020: 138000, 2021: 135000, 2022: 130000, 2023: 128000, 2024: 125000 },
+                fines: { 2019: 850, 2020: 620, 2021: 480, 2022: 350, 2023: 280, 2024: 180 },
+                measures: 28,
+                certifications: ['ISO 14001', 'ISO 45001'],
+                target2030: 380000
+            },
+            {
+                code: 'ОМГ',
+                name: 'Озенмунайгаз',
+                fullName: 'АО «Озенмунайгаз»',
+                type: 'upstream',
+                typeLabel: 'Добыча',
+                director: 'Жумагалиев Талгат Кайратович',
+                location: { lat: 43.30, lng: 53.00, city: 'Жанаозен' },
+                established: 1965,
+                employees: 5200,
+                photo: '⛽',
+                ghg: { 2019: 680000, 2020: 660000, 2021: 640000, 2022: 620000, 2023: 605000, 2024: 590000 },
+                scope1: { 2019: 550000, 2020: 530000, 2021: 510000, 2022: 490000, 2023: 475000, 2024: 460000 },
+                scope2: { 2019: 130000, 2020: 130000, 2021: 130000, 2022: 130000, 2023: 130000, 2024: 130000 },
+                emissions: { 2019: 6800, 2020: 6500, 2021: 6200, 2022: 5900, 2023: 5700, 2024: 5500 },
+                water: { 2019: 450000, 2020: 440000, 2021: 425000, 2022: 410000, 2023: 400000, 2024: 385000 },
+                waste: { 2019: 22000, 2020: 21000, 2021: 20000, 2022: 19200, 2023: 18500, 2024: 17800 },
+                taxes: { 2019: 168000, 2020: 162000, 2021: 155000, 2022: 148000, 2023: 142000, 2024: 138000 },
+                fines: { 2019: 1200, 2020: 980, 2021: 750, 2022: 580, 2023: 420, 2024: 320 },
+                measures: 35,
+                certifications: ['ISO 14001', 'ISO 50001', 'ISO 45001'],
+                target2030: 480000
+            }
+        ];
+
+        const pnurMeasures = [
+            { id: 1, dzo: 'АНПЗ', category: 'Энергоэффективность', name: 'Модернизация пароконденсатной системы ЭЛОУ-АТ-2', start: 2022, end: 2026, co2: 6380, cost: 1116, status: 'in_progress', progress: 65 },
+            { id: 2, dzo: 'АНПЗ', category: 'Энергоэффективность', name: 'Оптимизация тепловых потоков ЭЛОУ-АВТ-3', start: 2021, end: 2022, co2: 24164, cost: 265, status: 'completed', progress: 100 },
+            { id: 3, dzo: 'АНПЗ', category: 'Снижение выбросов', name: 'Замена горелок на ЭЛОУ-АТ-2 (36 шт)', start: 2021, end: 2024, co2: 22382, cost: 1777, status: 'completed', progress: 100 },
+            { id: 4, dzo: 'АНПЗ', category: 'Водоочистка', name: 'Реконструкция МОС проект Tazalyq', start: 2024, end: 2025, co2: 130, cost: 6200, status: 'in_progress', progress: 40 },
+            { id: 5, dzo: 'КГМ', category: 'Энергоэффективность', name: 'Перевод потока ГУ-2 через байпас', start: 2021, end: 2022, co2: 930, cost: 0, status: 'completed', progress: 100 },
+            { id: 6, dzo: 'КГМ', category: 'Энергоэффективность', name: 'Остановка оборудования ГУ-1 Акшабулак', start: 2023, end: 2025, co2: 1912, cost: 233, status: 'in_progress', progress: 70 },
+            { id: 7, dzo: 'КГМ', category: 'Снижение выбросов', name: 'Увеличение диаметра линий сточной воды', start: 2024, end: 2025, co2: 224, cost: 78, status: 'in_progress', progress: 45 },
+            { id: 8, dzo: 'CASPI_BITUM', category: 'Энергоэффективность', name: 'Замена футеровки печи дожига F-1201', start: 2022, end: 2023, co2: 109, cost: 60, status: 'completed', progress: 100 },
+            { id: 9, dzo: 'CASPI_BITUM', category: 'Энергоэффективность', name: 'Модернизация пароконденсатных систем', start: 2026, end: 2026, co2: 267, cost: 125, status: 'planned', progress: 0 },
+            { id: 10, dzo: 'CASPI_BITUM', category: 'Снижение выбросов', name: 'Замена конденсатоотводчиков', start: 2023, end: 2024, co2: 1726, cost: 14, status: 'completed', progress: 100 },
+            { id: 11, dzo: 'КТО', category: 'Энергоэффективность', name: 'Замена светильников на LED ГНПС Атасу', start: 2022, end: 2022, co2: 147, cost: 7, status: 'completed', progress: 100 },
+            { id: 12, dzo: 'КТО', category: 'Снижение выбросов', name: 'Монтаж понтонов РВС-20000', start: 2025, end: 2026, co2: 850, cost: 320, status: 'in_progress', progress: 25 },
+            { id: 13, dzo: 'КТО', category: 'Энергоэффективность', name: 'Установка ЧРП на насосных агрегатах', start: 2023, end: 2025, co2: 2100, cost: 890, status: 'in_progress', progress: 60 },
+            { id: 14, dzo: 'ПКОП', category: 'Энергоэффективность', name: 'Модернизация печей установки АВТ', start: 2023, end: 2025, co2: 15000, cost: 2500, status: 'in_progress', progress: 55 },
+            { id: 15, dzo: 'ПКОП', category: 'Снижение выбросов', name: 'Установка системы улавливания паров', start: 2024, end: 2026, co2: 3200, cost: 1800, status: 'in_progress', progress: 30 },
+            { id: 16, dzo: 'ЭМГ', category: 'Утилизация ПНГ', name: 'Строительство ГТЭС 25 МВт', start: 2022, end: 2024, co2: 45000, cost: 12000, status: 'completed', progress: 100 },
+            { id: 17, dzo: 'ЭМГ', category: 'Энергоэффективность', name: 'Оптимизация системы ППД', start: 2024, end: 2026, co2: 8500, cost: 3200, status: 'in_progress', progress: 35 },
+            { id: 18, dzo: 'ОМГ', category: 'Утилизация ПНГ', name: 'Модернизация ГТЭС Узень', start: 2023, end: 2025, co2: 32000, cost: 8500, status: 'in_progress', progress: 70 },
+            { id: 19, dzo: 'ОМГ', category: 'Снижение выбросов', name: 'Герметизация резервуарного парка', start: 2024, end: 2027, co2: 5600, cost: 2100, status: 'in_progress', progress: 20 },
+        ];
+
+        // Chart colors
+        const COLORS = ['#059669', '#0891b2', '#7c3aed', '#ea580c', '#dc2626', '#2563eb', '#65a30d'];
+
+        // ============ NAVIGATION ============
+        let currentPage = 'dashboard';
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const page = btn.dataset.page;
+                switchPage(page);
+            });
+        });
+
+        function switchPage(page) {
+            currentPage = page;
+            
+            // Update nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.page === page);
+            });
+            
+            // Update pages
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.toggle('active', p.id === `page-${page}`);
+            });
+            
+            // Initialize page-specific content
+            if (page === 'dashboard') initDashboard();
+            if (page === 'passport') initPassport();
+            if (page === 'compare') initCompare();
+            if (page === 'pnur') initPNUR();
+            if (page === 'analytics') initAnalytics();
+        }
+
+        // ============ UTILITIES ============
+        function formatNumber(num) {
+            return num.toLocaleString('ru-RU');
+        }
+
+        function getDzoPhoto(code) {
+            const dzo = dzoData.find(d => d.code === code);
+            return dzo ? dzo.photo : '🏢';
+        }
+
+        // ============ DASHBOARD ============
+        let pieChart, trendChart;
+
+        function initDashboard() {
+            // Calculate KMG totals
+            const years = [2019, 2020, 2021, 2022, 2023, 2024];
+            const ghgTotals = {};
+            const emissionsTotals = {};
+            
+            years.forEach(year => {
+                ghgTotals[year] = dzoData.reduce((sum, dzo) => sum + (dzo.ghg[year] || 0), 0);
+                emissionsTotals[year] = dzoData.reduce((sum, dzo) => sum + (dzo.emissions[year] || 0), 0);
+            });
+            
+            // Update KPIs
+            document.getElementById('kpi-ghg').textContent = (ghgTotals[2024] / 1000000).toFixed(2);
+            document.getElementById('kpi-emissions').textContent = (emissionsTotals[2024] / 1000).toFixed(1);
+            document.getElementById('kpi-pnur').textContent = pnurMeasures.filter(m => m.status === 'in_progress').length;
+            
+            // Initialize map markers
+            initMap();
+            
+            // Pie chart
+            const dzoBreakdown = dzoData.map(dzo => ({
+                name: dzo.code,
+                value: Math.round(dzo.ghg[2024] / 1000)
+            })).sort((a, b) => b.value - a.value);
+            
+            const pieCtx = document.getElementById('pie-chart').getContext('2d');
+            if (pieChart) pieChart.destroy();
+            pieChart = new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: dzoBreakdown.map(d => d.name),
+                    datasets: [{
+                        data: dzoBreakdown.map(d => d.value),
+                        backgroundColor: COLORS,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    cutout: '60%'
+                }
+            });
+            
+            // Pie legend
+            const pieLegend = document.getElementById('pie-legend');
+            pieLegend.innerHTML = dzoBreakdown.slice(0, 5).map((item, i) => `
+                <div class="pie-legend-item">
+                    <div class="left">
+                        <div class="pie-legend-color" style="background: ${COLORS[i]}"></div>
+                        <span class="name">${item.name}</span>
+                    </div>
+                    <span class="value">${formatNumber(item.value)} тыс.</span>
+                </div>
+            `).join('');
+            
+            // Trend chart
+            const trendData = years.map(year => ({
+                year,
+                value: Math.round(ghgTotals[year] / 1000)
+            }));
+            
+            const trendCtx = document.getElementById('trend-chart').getContext('2d');
+            if (trendChart) trendChart.destroy();
+            trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: trendData.map(d => d.year),
+                    datasets: [{
+                        label: 'Выбросы ПГ (тыс. т CO₂)',
+                        data: trendData.map(d => d.value),
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#059669'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: value => `${value}k`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initMap() {
+            const svg = document.getElementById('kazakhstan-map');
+            
+            // Remove existing markers
+            svg.querySelectorAll('.map-marker').forEach(m => m.remove());
+            
+            // Add DZO markers
+            dzoData.forEach(dzo => {
+                const x = ((dzo.location.lng - 46) / 40) * 600 + 100;
+                const y = ((55 - dzo.location.lat) / 15) * 300 + 50;
+                
+                const typeColors = {
+                    refinery: '#ef4444',
+                    upstream: '#3b82f6',
+                    transport: '#8b5cf6'
+                };
+                
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.classList.add('map-marker');
+                g.innerHTML = `
+                    <circle cx="${x}" cy="${y}" r="12" fill="${typeColors[dzo.type]}" opacity="0.8"/>
+                    <circle cx="${x}" cy="${y}" r="16" fill="none" stroke="${typeColors[dzo.type]}" stroke-width="2" opacity="0.3"/>
+                    <text x="${x}" y="${y + 28}" text-anchor="middle" font-size="11" font-weight="600" fill="#334155">${dzo.code}</text>
+                `;
+                
+                g.addEventListener('click', () => showDzoInfo(dzo));
+                svg.appendChild(g);
+            });
+        }
+
+        function showDzoInfo(dzo) {
+            const info = document.getElementById('selected-dzo-info');
+            info.style.display = 'flex';
+            document.getElementById('selected-dzo-photo').textContent = dzo.photo;
+            document.getElementById('selected-dzo-name').textContent = dzo.name;
+            document.getElementById('selected-dzo-city').textContent = dzo.location.city;
+            document.getElementById('selected-dzo-ghg').textContent = formatNumber(Math.round(dzo.ghg[2024] / 1000));
+        }
+
+        // ============ PASSPORT ============
+        let selectedPassportDzo = dzoData[0];
+        let passportMiniChart, passportGhgChart, passportScopeChart;
+
+        function initPassport() {
+            // Build DZO list
+            const dzoList = document.getElementById('dzo-list');
+            dzoList.innerHTML = dzoData.map(dzo => `
+                <button class="dzo-btn ${dzo.code === selectedPassportDzo.code ? 'active' : ''}" data-code="${dzo.code}">
+                    <span class="dzo-btn-photo">${dzo.photo}</span>
+                    <div class="dzo-btn-info">
+                        <div class="name">${dzo.code}</div>
+                        <div class="city">${dzo.location.city}</div>
+                    </div>
+                </button>
+            `).join('');
+            
+            // Add click handlers
+            dzoList.querySelectorAll('.dzo-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const code = btn.dataset.code;
+                    selectedPassportDzo = dzoData.find(d => d.code === code);
+                    
+                    // Update active state
+                    dzoList.querySelectorAll('.dzo-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Update passport content
+                    updatePassportContent();
+                });
+            });
+            
+            // Initial content
+            updatePassportContent();
+        }
+
+        function updatePassportContent() {
+            const dzo = selectedPassportDzo;
+            
+            // Cover
+            document.getElementById('cover-photo').textContent = dzo.photo;
+            document.getElementById('cover-name').textContent = dzo.name;
+            document.getElementById('cover-fullname').textContent = dzo.fullName;
+            
+            // Info
+            document.getElementById('info-photo').textContent = dzo.photo;
+            document.getElementById('info-fullname').textContent = dzo.fullName;
+            document.getElementById('info-code').textContent = dzo.code;
+            document.getElementById('info-established').textContent = dzo.established;
+            document.getElementById('info-city').textContent = dzo.location.city;
+            document.getElementById('info-employees').textContent = formatNumber(dzo.employees);
+            document.getElementById('info-director').textContent = dzo.director;
+            
+            const typeBadge = document.getElementById('info-type');
+            typeBadge.textContent = dzo.typeLabel;
+            typeBadge.className = `passport-type-badge ${dzo.type}`;
+            
+            // Stamps
+            const stamps = document.getElementById('info-stamps');
+            stamps.innerHTML = dzo.certifications.map(cert => `
+                <div class="passport-stamp">
+                    <span class="passport-stamp-icon">🏆</span>
+                    <span class="passport-stamp-text">${cert}</span>
+                </div>
+            `).join('');
+            
+            // Data
+            document.getElementById('data-ghg').textContent = formatNumber(Math.round(dzo.ghg[2024] / 1000));
+            document.getElementById('data-target').textContent = formatNumber(Math.round(dzo.target2030 / 1000));
+            document.getElementById('data-emissions').textContent = formatNumber(dzo.emissions[2024]);
+            document.getElementById('data-measures').textContent = dzo.measures;
+            
+            // Mini chart
+            const years = [2019, 2020, 2021, 2022, 2023, 2024];
+            const ghgData = years.map(y => Math.round(dzo.ghg[y] / 1000));
+            
+            const miniCtx = document.getElementById('passport-mini-chart').getContext('2d');
+            if (passportMiniChart) passportMiniChart.destroy();
+            passportMiniChart = new Chart(miniCtx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        data: ghgData,
+                        borderColor: '#059669',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: true, ticks: { font: { size: 10 } } },
+                        y: { display: true, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+            
+            // Analytics
+            document.getElementById('analytics-dzo-name').textContent = dzo.name;
+            document.getElementById('analytics-scope1').textContent = formatNumber(Math.round(dzo.scope1[2024] / 1000));
+            document.getElementById('analytics-scope2').textContent = formatNumber(Math.round(dzo.scope2[2024] / 1000));
+            document.getElementById('analytics-water').textContent = formatNumber(Math.round(dzo.water[2024] / 1000));
+            document.getElementById('analytics-fines').textContent = formatNumber(dzo.fines[2024]);
+            
+            // GHG Chart
+            const ghgCtx = document.getElementById('passport-ghg-chart').getContext('2d');
+            if (passportGhgChart) passportGhgChart.destroy();
+            passportGhgChart = new Chart(ghgCtx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        label: 'Выбросы ПГ',
+                        data: ghgData,
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: v => `${v}k` } }
+                    }
+                }
+            });
+            
+            // Scope Chart
+            const scope1Data = years.map(y => Math.round(dzo.scope1[y] / 1000));
+            const scope2Data = years.map(y => Math.round(dzo.scope2[y] / 1000));
+            
+            const scopeCtx = document.getElementById('passport-scope-chart').getContext('2d');
+            if (passportScopeChart) passportScopeChart.destroy();
+            passportScopeChart = new Chart(scopeCtx, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'Scope 1',
+                            data: scope1Data,
+                            backgroundColor: '#059669'
+                        },
+                        {
+                            label: 'Scope 2',
+                            data: scope2Data,
+                            backgroundColor: '#0891b2'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, ticks: { callback: v => `${v}k` } }
+                    }
+                }
+            });
+        }
+
+        // ============ COMPARISON ============
+        let selectedCompare = [dzoData[0], dzoData[1], dzoData[3]];
+        let radarChart;
+
+        const compareMetrics = [
+            { key: 'ghg', label: 'Выбросы ПГ 2024', unit: 'тыс. т CO₂', format: dzo => Math.round(dzo.ghg[2024] / 1000), lower: true },
+            { key: 'scope1', label: 'Scope 1', unit: 'тыс. т CO₂', format: dzo => Math.round(dzo.scope1[2024] / 1000), lower: true },
+            { key: 'scope2', label: 'Scope 2', unit: 'тыс. т CO₂', format: dzo => Math.round(dzo.scope2[2024] / 1000), lower: true },
+            { key: 'emissions', label: 'Выбросы ЗВ', unit: 'т/год', format: dzo => dzo.emissions[2024], lower: true },
+            { key: 'water', label: 'Водопотребление', unit: 'тыс. м³', format: dzo => Math.round(dzo.water[2024] / 1000), lower: true },
+            { key: 'waste', label: 'Отходы', unit: 'т/год', format: dzo => dzo.waste[2024], lower: true },
+            { key: 'measures', label: 'Меры ПНУР', unit: 'шт.', format: dzo => dzo.measures, lower: false },
+            { key: 'taxes', label: 'Экоплатежи', unit: 'тыс. ₸', format: dzo => dzo.taxes[2024], lower: true },
+            { key: 'fines', label: 'Штрафы', unit: 'тыс. ₸', format: dzo => dzo.fines[2024], lower: true },
+            { key: 'progress', label: 'Прогресс к 2030', unit: '%', format: dzo => Math.round((1 - dzo.ghg[2024] / dzo.ghg[2019]) * 100), lower: false }
+        ];
+
+        function initCompare() {
+            // Build selector
+            const selector = document.getElementById('compare-selector');
+            selector.innerHTML = dzoData.map(dzo => `
+                <button class="compare-btn ${selectedCompare.find(s => s.code === dzo.code) ? 'active' : ''}" data-code="${dzo.code}">
+                    ${dzo.photo} ${dzo.code}
+                </button>
+            `).join('');
+            
+            selector.querySelectorAll('.compare-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const code = btn.dataset.code;
+                    const dzo = dzoData.find(d => d.code === code);
+                    
+                    if (selectedCompare.find(s => s.code === code)) {
+                        selectedCompare = selectedCompare.filter(s => s.code !== code);
+                    } else if (selectedCompare.length < 3) {
+                        selectedCompare.push(dzo);
+                    }
+                    
+                    initCompare();
+                });
+            });
+            
+            // Build table
+            buildCompareTable();
+            
+            // Build radar
+            buildRadarChart();
+        }
+
+        function buildCompareTable() {
+            const table = document.getElementById('compare-table');
+            const cols = selectedCompare.length + 1;
+            
+            // Header
+            let html = `
+                <div class="compare-table-header" style="grid-template-columns: 200px repeat(${selectedCompare.length}, 1fr);">
+                    <div class="compare-table-header-cell"></div>
+                    ${selectedCompare.map(dzo => `
+                        <div class="compare-table-header-cell">
+                            <div class="compare-dzo-photo">${dzo.photo}</div>
+                            <div class="compare-dzo-name">${dzo.name}</div>
+                            <div class="compare-dzo-city">${dzo.location.city}</div>
+                            <span class="compare-dzo-type ${dzo.type}">${dzo.typeLabel}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // Rows
+            compareMetrics.forEach(metric => {
+                const values = selectedCompare.map(dzo => metric.format(dzo));
+                const best = metric.lower 
+                    ? Math.min(...values)
+                    : Math.max(...values);
+                
+                html += `
+                    <div class="compare-table-row" style="grid-template-columns: 200px repeat(${selectedCompare.length}, 1fr);">
+                        <div class="compare-table-cell">
+                            <span class="label">${metric.label}</span>
+                            <span class="unit">${metric.unit}</span>
+                        </div>
+                        ${selectedCompare.map(dzo => {
+                            const val = metric.format(dzo);
+                            const isBest = val === best;
+                            return `
+                                <div class="compare-table-cell data">
+                                    <span class="compare-value ${isBest ? 'best' : ''}">${formatNumber(val)}</span>
+                                    ${isBest ? '<span class="compare-check">✓</span>' : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            });
+            
+            table.innerHTML = html;
+        }
+
+        function buildRadarChart() {
+            const ctx = document.getElementById('radar-chart').getContext('2d');
+            
+            const radarData = {
+                labels: ['Выбросы ПГ', 'Выбросы ЗВ', 'Вода', 'Отходы', 'ПНУР', 'Прогресс'],
+                datasets: selectedCompare.map((dzo, i) => ({
+                    label: dzo.code,
+                    data: [
+                        100 - (dzo.ghg[2024] / 2500000 * 100),
+                        100 - (dzo.emissions[2024] / 30000 * 100),
+                        100 - (dzo.water[2024] / 8000000 * 100),
+                        100 - (dzo.waste[2024] / 100000 * 100),
+                        dzo.measures / 50 * 100,
+                        (1 - dzo.ghg[2024] / dzo.ghg[2019]) * 100 + 50
+                    ],
+                    borderColor: COLORS[i],
+                    backgroundColor: `${COLORS[i]}33`,
+                    borderWidth: 2,
+                    pointRadius: 4
+                }))
+            };
+            
+            if (radarChart) radarChart.destroy();
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: radarData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { stepSize: 20 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+            
+            // Legend
+            const legend = document.getElementById('compare-legend');
+            legend.innerHTML = selectedCompare.map((dzo, i) => `
+                <div class="compare-legend-item">
+                    <div class="compare-legend-color" style="background: ${COLORS[i]}"></div>
+                    <span>${dzo.code}</span>
+                </div>
+            `).join('');
+        }
+
+        // ============ PNUR ============
+        let pnurStatusFilter = 'all';
+        let pnurCategoryFilter = 'all';
+
+        function initPNUR() {
+            // Summary
+            const totalCO2 = pnurMeasures.reduce((sum, m) => sum + m.co2, 0);
+            const totalCost = pnurMeasures.reduce((sum, m) => sum + m.cost, 0);
+            const completedCO2 = pnurMeasures.filter(m => m.status === 'completed').reduce((sum, m) => sum + m.co2, 0);
+            
+            document.getElementById('pnur-total').textContent = pnurMeasures.length;
+            document.getElementById('pnur-co2').textContent = `${Math.round(totalCO2 / 1000)}k`;
+            document.getElementById('pnur-cost').textContent = (totalCost / 1000).toFixed(1);
+            document.getElementById('pnur-achieved').textContent = `${Math.round(completedCO2 / 1000)}k`;
+            
+            // Filters
+            document.querySelectorAll('#pnur-status-filters .pnur-filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#pnur-status-filters .pnur-filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    pnurStatusFilter = btn.dataset.filter;
+                    renderPNUR();
+                });
+            });
+            
+            document.getElementById('pnur-category-filter').addEventListener('change', (e) => {
+                pnurCategoryFilter = e.target.value;
+                renderPNUR();
+            });
+            
+            renderPNUR();
+        }
+
+        function renderPNUR() {
+            const filtered = pnurMeasures.filter(m => {
+                if (pnurStatusFilter !== 'all' && m.status !== pnurStatusFilter) return false;
+                if (pnurCategoryFilter !== 'all' && m.category !== pnurCategoryFilter) return false;
+                return true;
+            });
+            
+            // Timeline
+            const timelineRows = document.getElementById('pnur-timeline-rows');
+            const minYear = 2022;
+            const maxYear = 2027;
+            const yearSpan = maxYear - minYear + 1;
+            
+            timelineRows.innerHTML = filtered.map(m => {
+                // Ensure start year is at least 2022
+                const effectiveStart = Math.max(m.start, minYear);
+                const effectiveEnd = Math.min(m.end || m.start, maxYear);
+                
+                const startOffset = ((effectiveStart - minYear) / yearSpan) * 100;
+                const duration = ((effectiveEnd - effectiveStart + 1) / yearSpan) * 100;
+                
+                const statusColors = {
+                    completed: 'completed',
+                    in_progress: 'in_progress',
+                    planned: 'planned'
+                };
+                
+                return `
+                    <div class="pnur-timeline-row">
+                        <div class="pnur-timeline-label">
+                            <span class="pnur-timeline-label-photo">${getDzoPhoto(m.dzo)}</span>
+                            <div class="pnur-timeline-label-text">
+                                <div class="pnur-timeline-label-name" title="${m.name}">${m.name}</div>
+                                <div class="pnur-timeline-label-dzo">${m.dzo}</div>
+                            </div>
+                        </div>
+                        <div class="pnur-timeline-bar-container">
+                            <div class="pnur-timeline-bar ${statusColors[m.status]}" style="left: ${startOffset}%; width: ${Math.max(duration, 10)}%;">
+                                ${m.status === 'in_progress' ? `<div class="pnur-timeline-bar-progress" style="width: ${m.progress}%"></div>` : ''}
+                                <span class="pnur-timeline-bar-text">${formatNumber(m.co2)} т</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Cards
+            const cards = document.getElementById('pnur-cards');
+            const statusLabels = {
+                completed: 'Завершено',
+                in_progress: 'В работе',
+                planned: 'Планируется'
+            };
+            
+            cards.innerHTML = filtered.slice(0, 6).map(m => `
+                <div class="pnur-card">
+                    <div class="pnur-card-header">
+                        <div class="pnur-card-header-left">
+                            <span class="pnur-card-photo">${getDzoPhoto(m.dzo)}</span>
+                            <div>
+                                <span class="pnur-card-status ${m.status}">${statusLabels[m.status]}</span>
+                                <div class="pnur-card-category">${m.category}</div>
+                            </div>
+                        </div>
+                        <span class="pnur-card-dzo">${m.dzo}</span>
+                    </div>
+                    <div class="pnur-card-name">${m.name}</div>
+                    <div class="pnur-card-metrics">
+                        <div class="pnur-card-metric">
+                            <div class="pnur-card-metric-value emerald">${formatNumber(m.co2)}</div>
+                            <div class="pnur-card-metric-label">т CO₂/год</div>
+                        </div>
+                        <div class="pnur-card-metric">
+                            <div class="pnur-card-metric-value blue">${m.cost}</div>
+                            <div class="pnur-card-metric-label">млн ₸</div>
+                        </div>
+                        <div class="pnur-card-metric">
+                            <div class="pnur-card-metric-value purple">${m.start}-${m.end}</div>
+                            <div class="pnur-card-metric-label">сроки</div>
+                        </div>
+                    </div>
+                    ${m.status === 'in_progress' ? `
+                        <div class="pnur-card-progress">
+                            <div class="pnur-card-progress-header">
+                                <span>Прогресс</span>
+                                <span>${m.progress}%</span>
+                            </div>
+                            <div class="pnur-card-progress-bar">
+                                <div class="pnur-card-progress-fill" style="width: ${m.progress}%"></div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        // ============ ANALYTICS ============
+        let analyticsScopeChart, analyticsWaterChart, analyticsFinesChart, analyticsPnurChart;
+
+        function initAnalytics() {
+            const years = [2019, 2020, 2021, 2022, 2023, 2024];
+            
+            // Scope 1 vs Scope 2
+            const scope1Data = years.map(y => dzoData.reduce((sum, d) => sum + (d.scope1[y] || 0), 0) / 1000000);
+            const scope2Data = years.map(y => dzoData.reduce((sum, d) => sum + (d.scope2[y] || 0), 0) / 1000000);
+            
+            const scopeCtx = document.getElementById('analytics-scope-chart').getContext('2d');
+            if (analyticsScopeChart) analyticsScopeChart.destroy();
+            analyticsScopeChart = new Chart(scopeCtx, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [
+                        { label: 'Scope 1', data: scope1Data, backgroundColor: '#059669' },
+                        { label: 'Scope 2', data: scope2Data, backgroundColor: '#0891b2' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, ticks: { callback: v => `${v}M` } }
+                    }
+                }
+            });
+            
+            // Water
+            const waterData = years.map(y => dzoData.reduce((sum, d) => sum + (d.water[y] || 0), 0) / 1000000);
+            
+            const waterCtx = document.getElementById('analytics-water-chart').getContext('2d');
+            if (analyticsWaterChart) analyticsWaterChart.destroy();
+            analyticsWaterChart = new Chart(waterCtx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        data: waterData,
+                        borderColor: '#0891b2',
+                        backgroundColor: 'rgba(8, 145, 178, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: v => `${v}M` } }
+                    }
+                }
+            });
+            
+            // Fines
+            const finesData = years.map(y => dzoData.reduce((sum, d) => sum + (d.fines[y] || 0), 0) / 1000);
+            
+            const finesCtx = document.getElementById('analytics-fines-chart').getContext('2d');
+            if (analyticsFinesChart) analyticsFinesChart.destroy();
+            analyticsFinesChart = new Chart(finesCtx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        data: finesData,
+                        borderColor: '#dc2626',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: v => `${v}k` } }
+                    }
+                }
+            });
+            
+            // PNUR structure
+            const categories = ['Энергоэффективность', 'Снижение выбросов', 'Утилизация ПНГ', 'Водоочистка'];
+            const categoryCounts = categories.map(cat => pnurMeasures.filter(m => m.category === cat).length);
+            
+            const pnurCtx = document.getElementById('analytics-pnur-chart').getContext('2d');
+            if (analyticsPnurChart) analyticsPnurChart.destroy();
+            analyticsPnurChart = new Chart(pnurCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: categories,
+                    datasets: [{
+                        data: categoryCounts,
+                        backgroundColor: ['#059669', '#0891b2', '#7c3aed', '#ea580c'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    cutout: '50%'
+                }
+            });
+            
+            // Ranking
+            const ranking = dzoData.map(dzo => ({
+                ...dzo,
+                ghgChange: ((dzo.ghg[2024] - dzo.ghg[2019]) / dzo.ghg[2019] * 100),
+                target2030Progress: Math.min(100, Math.max(0, (1 - dzo.ghg[2024] / dzo.ghg[2019]) / 0.15 * 100))
+            })).sort((a, b) => a.ghgChange - b.ghgChange);
+            
+            const rankingList = document.getElementById('analytics-ranking');
+            rankingList.innerHTML = ranking.map((dzo, i) => `
+                <div class="analytics-ranking-item">
+                    <div class="analytics-ranking-position">${i + 1}</div>
+                    <span class="analytics-ranking-photo">${dzo.photo}</span>
+                    <div class="analytics-ranking-info">
+                        <div class="analytics-ranking-name">${dzo.name}</div>
+                        <div class="analytics-ranking-code">${dzo.code}</div>
+                    </div>
+                    <div class="analytics-ranking-change">
+                        <div class="analytics-ranking-change-value ${dzo.ghgChange < 0 ? 'negative' : 'positive'}">
+                            ${dzo.ghgChange > 0 ? '+' : ''}${dzo.ghgChange.toFixed(1)}%
+                        </div>
+                        <div class="analytics-ranking-change-label">Изменение ПГ</div>
+                    </div>
+                    <div class="analytics-ranking-progress">
+                        <div class="analytics-ranking-progress-header">
+                            <span>К цели 2030</span>
+                            <span>${Math.round(dzo.target2030Progress)}%</span>
+                        </div>
+                        <div class="analytics-ranking-progress-bar">
+                            <div class="analytics-ranking-progress-fill" style="width: ${dzo.target2030Progress}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============ INIT ============
+        document.addEventListener('DOMContentLoaded', () => {
+            initDashboard();
+        });
+    </script>
+</body>
+</html>
